@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- আপনার AndroidManifest ফাইলে যে থিমটি দেওয়া আছে তা এখানে ডিফাইন করা হলো -->
+    <style name="Theme.AppCompat.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#007bff</item>
+        <item name="colorPrimaryDark">#0056b3</item>
+        <item name="colorAccent">#007bff</item>
+    </style>
+</resources>
