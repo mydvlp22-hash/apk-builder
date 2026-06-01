@@ -1,19 +1,11 @@
 buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.0'
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
+// আমরা এখান থেকে allprojects { repositories { ... } } অংশটি পুরোপুরি বাদ দিয়েছি, 
+// কারণ এটি অলরেডি আপনার settings.gradle ফাইলে সুন্দরভাবে সেট করা আছে।
 
 task clean(type: Delete) {
     delete rootProject.buildDir
