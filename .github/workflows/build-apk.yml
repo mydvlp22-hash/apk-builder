@@ -14,7 +14,6 @@ jobs:
 
     - name: Inject User Inputs into Files
       run: |
-        # ইউজারের ইনপুটগুলো ভেরিয়েবলে নেওয়া হচ্ছে
         USER_URL="${{ github.event.client_payload.website_url }}"
         VERSION_CODE="${{ github.event.client_payload.version_code }}"
         VERSION_NAME="${{ github.event.client_payload.version_name }}"
@@ -28,6 +27,7 @@ jobs:
         sed -i "s/VERSION_NAME_PLACEHOLDER/$VERSION_NAME/g" app/build.gradle
 
         # config.json ফাইলে ডায়নামিক ভ্যালুগুলো ইনজেক্ট করা
+        mkdir -p app/src/main/assets
         cat <<EOF > app/src/main/assets/config.json
         {
           "website_url": "$USER_URL",
@@ -52,10 +52,10 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build Custom Android APK
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleRelease
 
     - name: Upload Generated APK
       uses: actions/upload-artifact@v4
       with:
         name: Custom-Web-App-v${{ github.event.client_payload.version_name }}
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: app/build/outputs/apk/release/*.apk
