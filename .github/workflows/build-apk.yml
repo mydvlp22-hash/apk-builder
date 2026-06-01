@@ -12,7 +12,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Inject User Inputs into Files
+    - name: Create Missing Android Project Structure & Inject Inputs
       run: |
         USER_URL="${{ github.event.client_payload.website_url }}"
         VERSION_CODE="${{ github.event.client_payload.version_code }}"
@@ -22,11 +22,11 @@ jobs:
         ADMOB_ID="${{ github.event.client_payload.admob_id }}"
         STARTIO_ID="${{ github.event.client_payload.startio_id }}"
 
-        # build.gradle ফাইলে ভার্সন কোড ও নেম পরিবর্তন করা
+        # ১. build.gradle ফাইলে ভার্সন কোড ও নেম পরিবর্তন করা
         sed -i "s/VERSION_CODE_PLACEHOLDER/$VERSION_CODE/g" app/build.gradle
         sed -i "s/VERSION_NAME_PLACEHOLDER/$VERSION_NAME/g" app/build.gradle
 
-        # config.json ফাইলে ডায়নামিক ভ্যালুগুলো ইনজেক্ট করা
+        # ২. config.json ফাইলে ডায়নামিক ভ্যালুগুলো ইনজেক্ট করা
         mkdir -p app/src/main/assets
         cat <<EOF > app/src/main/assets/config.json
         {
@@ -37,6 +37,40 @@ jobs:
           "screen_orientation": "$ORIENTATION"
         }
         EOF
+
+        # ৩. মিসিং জাভা ডিরেক্টরি এবং MainActivity.java ফাইল তৈরি করা
+        mkdir -p app/src/main/java/com/vdosky/app
+        cat <<EOF > app/src/main/java/com/vdosky/app/MainActivity.java
+        package com.vdosky.app;
+        
+        import android.os.Bundle;
+        import androidx.appcompat.app.AppCompatActivity;
+
+        public class MainActivity extends AppCompatActivity {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                // আপনার assets/config.json থেকে ইউজার ইনপুট রিড করার বেসিক লজিক এখানে কাজ করবে
+            }
+        }
+        EOF
+
+        # ৪. মিসিং রিসোর্স ডিরেক্টরি (Mipmap ও Values) তৈরি করা যাতে আইকন বা থিম এরর না আসে
+        mkdir -p app/src/main/res/values
+        mkdir -p app/src/main/res/mipmap-hdpi
+
+        # ডিফল্ট কালার তৈরি
+        cat <<EOF > app/src/main/res/values/colors.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <color name="black">#FF000000</color>
+            <color name="white">#FFFFFFFF</color>
+        </resources>
+        EOF
+
+        # ৫. প্লেসহোল্ডার ডামি আইকন তৈরি (যাতে আইকন মিসিং এরর না আসে)
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > app/src/main/res/mipmap-hdpi/ic_launcher.png
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > app/src/main/res/mipmap-hdpi/ic_launcher_round.png
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -52,10 +86,10 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build Custom Android APK
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleDebug
 
     - name: Upload Generated APK
       uses: actions/upload-artifact@v4
       with:
         name: Custom-Web-App-v${{ github.event.client_payload.version_name }}
-        path: app/build/outputs/apk/release/*.apk
+        path: app/build/outputs/apk/debug/*.apk
