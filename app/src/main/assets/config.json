@@ -1,7 +1,6 @@
 {
-  "website_url": "https://example.com",
-  "ad_network": "admob", 
-  "admob_banner_id": "ca-app-pub-3940256099942544/6300978111",
-  "startio_app_id": "YOUR_STARTIO_APP_ID",
-  "screen_orientation": "auto"
+    "app_name": "VDOSky",
+    "version": "1.0.0",
+    "api_url": "https://www.blogger.com",
+    "updated_at": "6/1/2026, 7:27:26 PM"
 }
