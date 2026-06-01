@@ -12,7 +12,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Create Missing Android Project Structure & Inject Inputs
+    - name: Dynamically Update Versions and Config JSON
       run: |
         USER_URL="${{ github.event.client_payload.website_url }}"
         VERSION_CODE="${{ github.event.client_payload.version_code }}"
@@ -22,14 +22,16 @@ jobs:
         ADMOB_ID="${{ github.event.client_payload.admob_id }}"
         STARTIO_ID="${{ github.event.client_payload.startio_id }}"
 
-        # ১. build.gradle ফাইলে ভার্সন কোড ও নেম পরিবর্তন করা
+        # ১. build.gradle ফাইলের প্লেসহোল্ডার ডাইনামিকালি রিপ্লেস করা
         sed -i "s/VERSION_CODE_PLACEHOLDER/$VERSION_CODE/g" app/build.gradle
         sed -i "s/VERSION_NAME_PLACEHOLDER/$VERSION_NAME/g" app/build.gradle
 
-        # ২. config.json ফাইলে ডায়নামিক ভ্যালুগুলো ইনজেক্ট করা
+        # ২. আপনার আসল config.json ফাইলটি ব্লগারের ইনপুট দিয়ে আপডেট করা
         mkdir -p app/src/main/assets
         cat <<EOF > app/src/main/assets/config.json
         {
+          "app_name": "VDOSky",
+          "version": "$VERSION_NAME",
           "website_url": "$USER_URL",
           "ad_network": "$AD_NETWORK",
           "admob_banner_id": "$ADMOB_ID",
@@ -38,28 +40,20 @@ jobs:
         }
         EOF
 
-        # ৩. মিসিং জাভা ডিরেক্টরি এবং MainActivity.java ফাইল তৈরি করা
-        mkdir -p app/src/main/java/com/vdosky/app
-        cat <<EOF > app/src/main/java/com/vdosky/app/MainActivity.java
-        package com.vdosky.app;
-        
-        import android.os.Bundle;
-        import androidx.appcompat.app.AppCompatActivity;
-
-        public class MainActivity extends AppCompatActivity {
-            @Override
-            protected void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                // আপনার assets/config.json থেকে ইউজার ইনপুট রিড করার বেসিক লজিক এখানে কাজ করবে
-            }
-        }
+        # ৩. অ্যাপের থিম মিসিং এরর দূর করার জন্য styles.xml তৈরি করা
+        mkdir -p app/src/main/res/values
+        cat <<EOF > app/src/main/res/values/styles.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <style name="Theme.AppCompat.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <item name="colorPrimary">#007bff</item>
+                <item name="colorPrimaryDark">#0056b3</item>
+                <item name="colorAccent">#007bff</item>
+            </style>
+        </resources>
         EOF
 
-        # ৪. মিসিং রিসোর্স ডিরেক্টরি (Mipmap ও Values) তৈরি করা যাতে আইকন বা থিম এরর না আসে
-        mkdir -p app/src/main/res/values
-        mkdir -p app/src/main/res/mipmap-hdpi
-
-        # ডিফল্ট কালার তৈরি
+        # ৪. কালার ফাইল ও ডামি আইকন তৈরি (যদি কোনো কারণে ডিরেক্টরি খালি থাকে)
         cat <<EOF > app/src/main/res/values/colors.xml
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
@@ -67,8 +61,8 @@ jobs:
             <color name="white">#FFFFFFFF</color>
         </resources>
         EOF
-
-        # ৫. প্লেসহোল্ডার ডামি আইকন তৈরি (যাতে আইকন মিসিং এরর না আসে)
+        
+        mkdir -p app/src/main/res/mipmap-hdpi
         echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > app/src/main/res/mipmap-hdpi/ic_launcher.png
         echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > app/src/main/res/mipmap-hdpi/ic_launcher_round.png
 
@@ -91,5 +85,5 @@ jobs:
     - name: Upload Generated APK
       uses: actions/upload-artifact@v4
       with:
-        name: Custom-Web-App-v${{ github.event.client_payload.version_name }}
+        name: VDOSky-App-v${{ github.event.client_payload.version_name }}
         path: app/build/outputs/apk/debug/*.apk
