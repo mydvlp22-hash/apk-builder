@@ -1,0 +1,7 @@
+{
+  "website_url": "https://example.com",
+  "ad_network": "admob", 
+  "admob_banner_id": "ca-app-pub-3940256099942544/6300978111",
+  "startio_app_id": "YOUR_STARTIO_APP_ID",
+  "screen_orientation": "auto"
+}
