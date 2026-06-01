@@ -12,7 +12,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Dynamically Update Versions and Config JSON
+    - name: Dynamically Update Versions, Config & Fix Project Structure
       run: |
         USER_URL="${{ github.event.client_payload.website_url }}"
         VERSION_CODE="${{ github.event.client_payload.version_code }}"
@@ -22,11 +22,26 @@ jobs:
         ADMOB_ID="${{ github.event.client_payload.admob_id }}"
         STARTIO_ID="${{ github.event.client_payload.startio_id }}"
 
-        # ১. build.gradle ফাইলের প্লেসহোল্ডার ডাইনামিকালি রিপ্লেস করা
+        # ১. ডিলিট করা settings.gradle ফাইলটি একদম পারফেক্ট নিয়মে অটো-রাইট করা হচ্ছে
+        cat <<EOF > settings.gradle
+        pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+        dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+        rootProject.name = "VDOSkyBuilder"
+        include ':app'
+        EOF
+
+        # ২. ডিলিট করা মেইন build.gradle ফাইলটি নতুন প্লাগইন দিয়ে অটো-রাইট করা হচ্ছে
+        cat <<EOF > build.gradle
+        buildscript { dependencies { classpath 'com.android.tools.build:gradle:8.1.0' } }
+        plugins { id 'com.android.application' version '8.1.0' apply false }
+        task clean(type: Delete) { delete rootProject.buildDir }
+        EOF
+
+        # ৩. app/build.gradle ফাইলের প্লেসহোল্ডার ডাইনামিকালি রিপ্লেস করা
         sed -i "s/VERSION_CODE_PLACEHOLDER/$VERSION_CODE/g" app/build.gradle
         sed -i "s/VERSION_NAME_PLACEHOLDER/$VERSION_NAME/g" app/build.gradle
 
-        # ২. আপনার আসল config.json ফাইলটি ব্লগারের ইনপুট দিয়ে আপডেট করা
+        # ৪. আপনার আসল config.json ফাইলটি ব্লগারের ইনপুট দিয়ে ডাইনামিকালি আপডেট করা
         mkdir -p app/src/main/assets
         cat <<EOF > app/src/main/assets/config.json
         {
@@ -40,7 +55,7 @@ jobs:
         }
         EOF
 
-        # ৩. অ্যাপের থিম মিসিং এরর দূর করার জন্য styles.xml তৈরি করা
+        # ৫. অ্যাপের থিম মিসিং এরর দূর করার জন্য styles.xml অটো-জেনারেট করা হচ্ছে
         mkdir -p app/src/main/res/values
         cat <<EOF > app/src/main/res/values/styles.xml
         <?xml version="1.0" encoding="utf-8"?>
@@ -53,7 +68,7 @@ jobs:
         </resources>
         EOF
 
-        # ৪. কালার ফাইল ও ডামি আইকন তৈরি (যদি কোনো কারণে ডিরেক্টরি খালি থাকে)
+        # ৬. কালার ফাইল ও ডামি আইকন তৈরি (যদি প্রজেক্ট ডিরেক্টরিতে মিসিং থাকে)
         cat <<EOF > app/src/main/res/values/colors.xml
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
